@@ -12,8 +12,8 @@ const getList = async () => {
       q: "",
       part: "snippet",
       type: "video",
-      publishedAfter: "2024-02-13T08:00:00Z",
-      publishedBefore: "2024-02-13T09:00:00Z",
+      publishedAfter: "2024-02-08T00:00:00Z",
+      publishedBefore: "2024-02-08T23:59:59Z",
       maxResults: 50,
     };
     let itemCount = 0;
@@ -25,7 +25,7 @@ const getList = async () => {
       data = response.data;
       itemCount += data.pageInfo.resultsPerPage;
       console.log(itemCount);
-      data.items.forEach(async (elem) => {
+      await data.items.forEach(async (elem) => {
         const item = await VideoList.findOne({ videoId: elem.id.videoId });
         if (!item) {
           try {
@@ -57,6 +57,7 @@ const getList = async () => {
   } catch (err) {
     console.log(err);
   }
+  console.log("finish collect new video");
 };
 
 const getVideoStats = async () => {
@@ -91,6 +92,7 @@ const getVideoStats = async () => {
   } catch (err) {
     console.log(err);
   }
+  console.log("finish video stats");
   //   process.exit(0);
 };
 
@@ -119,6 +121,7 @@ const getChannelStats = async () => {
   } catch (err) {
     console.log(err);
   }
+  console.log("finish channel stats");
 };
 
 const dropSmallest = async () => {
