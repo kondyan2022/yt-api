@@ -10,6 +10,7 @@ const videoListSchema = new Schema(
     views: Number,
     subscribers: Number,
     pubDate: Date,
+    duration: String,
   },
   { versionKey: false, timestamps: true }
 );

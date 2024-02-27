@@ -16,8 +16,8 @@ mongoose
   .then(() => {
     console.log("Database connection successful");
     // getList();
-    // getVideoStats();
-    getChannelStats();
+    getVideoStats();
+    // getChannelStats();
     // dropSmallest();
   })
   .catch((error) => {

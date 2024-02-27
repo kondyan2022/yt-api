@@ -10,22 +10,26 @@ const getList = async () => {
   try {
     const options = {
       q: "",
+      regionCode: "US",
       part: "snippet",
       type: "video",
-      publishedAfter: "2024-02-08T00:00:00Z",
-      publishedBefore: "2024-02-08T23:59:59Z",
+      videoDuration: "long",
+      publishedAfter: "2024-01-01T00:00:00Z",
+      // publishedBefore: "2024-02-15T09:59:59Z",
       maxResults: 50,
     };
     let itemCount = 0;
     let data;
     do {
       await sleep(1000);
-      //   console.log(options);
       const response = await youtube.search.list(options);
       data = response.data;
+      // console.log(data)
       itemCount += data.pageInfo.resultsPerPage;
       console.log(itemCount);
-      await data.items.forEach(async (elem) => {
+      for (elem of data.items) {
+        //   console.log(elem.snippet);
+        // }
         const item = await VideoList.findOne({ videoId: elem.id.videoId });
         if (!item) {
           try {
@@ -46,7 +50,7 @@ const getList = async () => {
         } else {
           console.log("already exist", elem.id.videoId);
         }
-      });
+      }
       console.log("page token", data.nextPageToken);
 
       if (data.nextPageToken) {
@@ -61,6 +65,7 @@ const getList = async () => {
 };
 
 const getVideoStats = async () => {
+  console.log("start video stats");
   try {
     let videoList = await VideoList.find().limit(50);
     let currentPage = 0;
@@ -69,20 +74,25 @@ const getVideoStats = async () => {
       const {
         data: { items },
       } = await youtube.videos.list({
-        part: "snippet,statistics",
+        part: "snippet,statistics,contentDetails",
         id: iDs,
         maxResults: 50,
       });
       const updateVideoList = items.map(
-        ({ id: videoId, statistics, snippet }) => ({
+        ({ id: videoId, statistics, snippet, contentDetails }) => ({
           videoId,
           channelId: snippet.channelId,
           views: statistics.viewCount,
+          duration: contentDetails.duration,
         })
       );
-      updateVideoList.forEach(async ({ videoId, views }) => {
-        await VideoList.findOneAndUpdate({ videoId }, { views });
-      });
+      for ({ videoId, views, duration } of updateVideoList) {
+        try {
+          await VideoList.findOneAndUpdate({ videoId }, { views, duration });
+        } catch (error) {
+          console.log("video update", error);
+        }
+      }
 
       currentPage += 1;
       videoList = await VideoList.find()
@@ -98,6 +108,7 @@ const getVideoStats = async () => {
 
 const getChannelStats = async () => {
   try {
+    console.log("start channel stats");
     const channelList = await VideoList.distinct("channelId"); //Тимчасовий варіант
     while (channelList.length) {
       const iDs = channelList.slice(0, 50).join(",");
@@ -113,9 +124,9 @@ const getChannelStats = async () => {
         subscribers: statistics.subscriberCount,
       }));
 
-      updateChannelList.forEach(async ({ channelId, subscribers }) => {
+      for ({ channelId, subscribers } of updateChannelList) {
         await VideoList.updateMany({ channelId }, { subscribers });
-      });
+      }
       channelList.splice(0, 50);
     }
   } catch (err) {
