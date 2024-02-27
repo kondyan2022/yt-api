@@ -6,7 +6,7 @@ const stats = async (req, res) => {
   const videoList = await VideoList.find()
     .limit(limit)
     .skip(limit * page)
-    .sort({ views: -1 });
+    .sort({ duration: -1 });
   const { length: totalCount } = await VideoList.find();
   const totalPage = Math.ceil(totalCount / limit);
 
